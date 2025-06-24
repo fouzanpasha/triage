@@ -1,0 +1,20 @@
+Voice model: Microsoft Azure Neural, ElevenLabs v3 (alpha), OpenAI “Voice Engine”
+
+NLP/Reasoning (what u have above is okay for now)
+
+Back-end: fine-tune some model (gpt-4o or llama)... this is where it takes transcription, prompts patient for questions, then when it has sufficient responses for pre-defined decsion pathways, it will either prompt patient that it will be transferred, suggest to see pharmacist first, or it may offer an appointment time.
+
+Appointment booking (GP Connect?) find out the current software we saw in the video (EMIS Partner API???)
+
+ETC...
+
+
+
+Patient calls -- AI Answer
+
+AI listens to the call from the patient, in this case the ai wil also be prompting questions just like a regular clerk
+
+now is the logical portion/ deicsion making where the ai decides the next step, who to be contacted, appointment setting etc. This logic portion will be working with the patients data as well (EMIS or System 1 for patient data) 
+                              -- Either we need an api that accesses this or the autonomeous agent will access it itself 
+
+After the logical portion is decided, the conclusion will then be sent  to the doctor or physiciam etc and the patient as well via email or number
