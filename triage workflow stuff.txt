@@ -18,3 +18,58 @@ now is the logical portion/ deicsion making where the ai decides the next step, 
                               -- Either we need an api that accesses this or the autonomeous agent will access it itself 
 
 After the logical portion is decided, the conclusion will then be sent  to the doctor or physiciam etc and the patient as well via email or number
+
+---------------
+┌──────────────────────────┐
+│        PSTN / SIP        │  Patient dials surgery’s main line
+└────────────┬─────────────┘
+             ▼  (RTP audio)
+┌──────────────────────────┐
+│  Telephony Edge (Twilio  │  • SIP trunk / WebRTC  
+│  or local SBC)           │  • Streams PCMU → gRPC
+└────────────┬─────────────┘
+             ▼
+┌──────────────────────────┐
+│  ASR Service             │  • faster‑whisper on GPU  
+│  (K8s pod, autoscaled)   │  • 15 s streaming chunks  
+│                          │  → JSON {text, t0,t1,conf}
+└────────────┬─────────────┘
+             ▼
+┌──────────────────────────┐
+│  Dialogue Orchestrator   │  • Rasa 3 (graph + Llama 3)  
+│  (“Reception‑Bot”)       │  • Function‑calling model  
+│                          │  → intents + entities
+└───────┬──────┬───────────┘
+        │      │
+        │      │─────────────────────────────────────────────────────────────┐
+        │                                                                   │
+        ▼                                                                   ▼
+┌───────────────────────┐                                  ┌──────────────────────────┐
+│  Triage Engine        │  A. Infermedica API *or*         │  Rules Firewall          │
+│  (clinical logic)     │  B. NHS Pathways micro‑service   │  (regex red‑flags &      │
+│                       │                                  │  safety thresholds)      │
+└────────┬──────────────┘                                  └──────────┬───────────────┘
+         ▼                                                                 ▼
+   {urgency, reason}                                               escalate_999 | ok
+         │                                                                 │
+         └─────────────┬───────────────────────────────────────────────────┘
+                       ▼
+┌──────────────────────────┐
+│  Scheduler Service       │  • Maps urgency ▸ slot policy                EMIS /      
+│  (FHIR client)           │  • Queries & books via                       SystmOne    
+│                          │    GP Connect Appointment API                FHIR APIs   
+└────────────┬─────────────┘
+             ▼
+┌──────────────────────────┐
+│  Notification Service    │  • Creates FHIR Task + HL7 FHIR Message to doctor inbox
+│  (NHS Mail / Task API)   │  • Sends confirmation SMS via Gov.UK Notify
+└────────────┬─────────────┘
+             ▼
+┌──────────────────────────┐
+│  TTS Service             │  • Azure Neural TTS container (UK South)  
+│  (streaming)             │  • SSML style=“empathetic”                 audio → caller
+└──────────────────────────┘
+
+-----------------------------
+
+
